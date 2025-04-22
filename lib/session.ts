@@ -3,7 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const SESSION_KEY = 'chat_with_docs_session';
-const SESSION_EXPIRY = 15 * 60 * 1000; // 15 minutes in milliseconds
+const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // one day in milliseconds
 
 export interface SessionData {
   id: string;

@@ -99,7 +99,7 @@ export async function runRagPipelineAction(query: string, sessionId: string): Pr
 
 export async function cleanupExpiredSessionsAction(): Promise<ActionState> {
   try {
-    const expiryTime = new Date(Date.now() - (15 * 60 * 1000)); // 15 minutes
+    const expiryTime = new Date(Date.now() - (24 * 60 * 60 * 1000)); // 1 day
     await deleteExpiredSessions(expiryTime);
     return { status: "success", message: "Expired sessions cleaned up successfully" };
   } catch (error) {
