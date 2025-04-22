@@ -3,7 +3,6 @@
 import { createDocument, createDocumentsFromChunks, deleteDocumentsBySessionId, deleteExpiredSessions, getDocumentById, getDocumentsBySessionId, retrieveRelevantDocuments, updateSessionLastAccessed } from "@/db/queries/documents-queries";
 import { InsertDocument } from "@/db/schema/documents-schema";
 import { generateEmbeddings } from "@/lib/rag/generate/generate-embeddings";
-import { splitText } from "@/lib/rag/processing/split-text";
 import { revalidatePath } from "next/cache";
 
 export type ActionState = {
@@ -11,6 +10,63 @@ export type ActionState = {
   message: string;
   data?: any;
 };
+
+// Helper function for simple character-based splitting
+function splitTextByChars(text: string, maxChars: number = 1500): string[] {
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  // Attempt to split by paragraphs first, then sentences, then fall back to characters
+  const paragraphs = text.split(/\n\s*\n/); // Split by double newline
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.length === 0) continue;
+
+    if (currentChunk.length + paragraph.length + 1 <= maxChars) {
+      currentChunk += (currentChunk.length > 0 ? "\n\n" : "") + paragraph;
+    } else {
+      // If paragraph itself is too long, split it further (e.g., by sentences or hard char limit)
+      if (paragraph.length <= maxChars) {
+        // If the current chunk isn't empty, push it first
+        if (currentChunk.length > 0) {
+          chunks.push(currentChunk);
+        }
+        currentChunk = paragraph;
+      } else {
+        // Paragraph is too long, split by character respecting word boundaries
+        if (currentChunk.length > 0) {
+          chunks.push(currentChunk);
+          currentChunk = "";
+        }
+        let startIndex = 0;
+        while (startIndex < paragraph.length) {
+          let endIndex = Math.min(startIndex + maxChars, paragraph.length);
+          // Try to end at a space if possible within the last ~100 chars
+          if (endIndex < paragraph.length) {
+             const lastSpace = paragraph.lastIndexOf(" ", endIndex);
+             if (lastSpace > startIndex && endIndex - lastSpace < 100) {
+                 endIndex = lastSpace;
+             }
+          }
+          chunks.push(paragraph.substring(startIndex, endIndex).trim());
+          startIndex = endIndex;
+          // Skip potential leading space for the next chunk
+          if (paragraph[startIndex] === ' ') {
+            startIndex++;
+          }
+        }
+      }
+    }
+  }
+
+  // Add the last remaining chunk
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk);
+  }
+
+  // Filter out any potentially empty chunks just in case
+  return chunks.filter(chunk => chunk.length > 0);
+}
 
 export async function createDocumentAction(data: InsertDocument): Promise<ActionState> {
   try {
@@ -23,37 +79,34 @@ export async function createDocumentAction(data: InsertDocument): Promise<Action
 }
 
 export async function processDocumentAction(text: string, sessionId: string): Promise<ActionState> {
-  // console.log(`[Vercel Log Test] processDocumentAction invoked. Session: ${sessionId}, Text length: ${text.length}`);
-  // console.log(`[Vercel Log Test] OPENAI_API_KEY available: ${!!process.env.OPENAI_API_KEY}`);
+  console.log(`processDocumentAction invoked. Session: ${sessionId}, Text length: ${text.length}`); // Keep basic invocation log
+  console.log(`OPENAI_API_KEY available: ${!!process.env.OPENAI_API_KEY}`); // Keep API key check log
 
   try {
-    /* Bypassed logging code:
-    console.log("[Vercel Log Test] Bypassing actual processing for log test.");
-    // Simulate some brief async work to mimic real-world delay
-    await new Promise(resolve => setTimeout(resolve, 100)); 
-    console.log("[Vercel Log Test] Simulated work finished.");
-    // Return a success state for the test
-    return { status: "success", message: "Log test successful", data: [] };
-    */
+    // Split input text into smaller chunks using the new character-based method
+    const chunks = splitTextByChars(text); // Use the new function
+    console.log(`Text split into ${chunks.length} chunks (char-based).`); // Log chunk count
 
-    // Original code restored:
-    // Split input text into smaller chunks
-    const chunks = await splitText(text);
+    if (chunks.length === 0) {
+       console.warn("Text resulted in 0 chunks after splitting.");
+       return { status: "success", message: "Document processed (empty or whitespace only), no chunks created.", data: [] };
+    }
 
     // Generate vector embeddings for each text chunk
+    console.log("Generating embeddings for chunks...");
     const embeddings = await generateEmbeddings(chunks);
+    console.log("Embeddings generated successfully.");
 
     // Store chunks and their embeddings in the database
+    console.log("Storing documents in database...");
     const documents = await createDocumentsFromChunks(chunks, sessionId, embeddings);
+    console.log(`${documents.length} document chunks stored successfully.`);
 
     revalidatePath("/");
     return { status: "success", message: "Document processed successfully", data: documents };
     
   } catch (error) {
-    // Restore original error logging 
-    console.error("Error processing document:", error);
-    // const errorMessage = error instanceof Error ? error.message : "Unknown error during log test";
-    // return { status: "error", message: `Log test failed: ${errorMessage}` };
+    console.error("Error processing document:", error); // Keep detailed error logging
     return { status: "error", message: "Failed to process document" };
   }
 }
