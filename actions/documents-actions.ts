@@ -23,18 +23,20 @@ export async function createDocumentAction(data: InsertDocument): Promise<Action
 }
 
 export async function processDocumentAction(text: string, sessionId: string): Promise<ActionState> {
-  console.log(`[Vercel Log Test] processDocumentAction invoked. Session: ${sessionId}, Text length: ${text.length}`);
-  console.log(`[Vercel Log Test] OPENAI_API_KEY available: ${!!process.env.OPENAI_API_KEY}`);
+  // console.log(`[Vercel Log Test] processDocumentAction invoked. Session: ${sessionId}, Text length: ${text.length}`);
+  // console.log(`[Vercel Log Test] OPENAI_API_KEY available: ${!!process.env.OPENAI_API_KEY}`);
 
   try {
+    /* Bypassed logging code:
     console.log("[Vercel Log Test] Bypassing actual processing for log test.");
     // Simulate some brief async work to mimic real-world delay
     await new Promise(resolve => setTimeout(resolve, 100)); 
     console.log("[Vercel Log Test] Simulated work finished.");
     // Return a success state for the test
     return { status: "success", message: "Log test successful", data: [] };
+    */
 
-    /* Original code bypassed:
+    // Original code restored:
     // Split input text into smaller chunks
     const chunks = await splitText(text);
 
@@ -46,13 +48,13 @@ export async function processDocumentAction(text: string, sessionId: string): Pr
 
     revalidatePath("/");
     return { status: "success", message: "Document processed successfully", data: documents };
-    */
+    
   } catch (error) {
-    // Log errors encountered even during the simplified test
-    console.error("[Vercel Log Test] Error during minimal action execution:", error);
-    // Use instanceof check for better error handling if needed, but console.error is primary here
-    const errorMessage = error instanceof Error ? error.message : "Unknown error during log test";
-    return { status: "error", message: `Log test failed: ${errorMessage}` };
+    // Restore original error logging 
+    console.error("Error processing document:", error);
+    // const errorMessage = error instanceof Error ? error.message : "Unknown error during log test";
+    // return { status: "error", message: `Log test failed: ${errorMessage}` };
+    return { status: "error", message: "Failed to process document" };
   }
 }
 
