@@ -16,6 +16,7 @@ export default function DocumentUploader() {
   }, []);
 
   const handleUpload = async () => {
+    console.log("handleUpload called. Session ID:", sessionId);
     try {
       if (!sessionId) return;
       
@@ -23,10 +24,12 @@ export default function DocumentUploader() {
       updateSessionTimestamp(sessionId);
       
       // Process document with session ID
+      console.log("Calling processDocument with text length:", document.length);
       await processDocument(document, sessionId);
+      console.log("processDocument call finished successfully.");
       setDocument("");
     } catch (error) {
-      console.error("Error processing document:", error);
+      console.error("Error in handleUpload (client-side):", error);
     }
   };
 
