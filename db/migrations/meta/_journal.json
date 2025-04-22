@@ -8,6 +8,13 @@
       "when": 1744983776662,
       "tag": "0000_true_the_fallen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745330523969,
+      "tag": "0001_cheerful_vindicator",
+      "breakpoints": true
     }
   ]
 }

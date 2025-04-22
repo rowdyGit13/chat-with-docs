@@ -4,22 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateCompletionWithContext } from "@/lib/rag/generate/generate-completions";
 import { runRagPipeline } from "@/lib/rag/retrieval/run-rag-pipeline";
-import { useState } from "react";
+import { getSessionId, updateSessionTimestamp } from "@/lib/session";
+import { useEffect, useState } from "react";
 
 export default function AiChat() {
   const [messages, setMessages] = useState<{ role: "user" | "ai"; content: string }[]>([]);
   const [input, setInput] = useState("");
   const [currentDocs, setCurrentDocs] = useState<string[]>([]);
   const [expandedSources, setExpandedSources] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState("");
+
+  useEffect(() => {
+    // Get session ID on component mount
+    setSessionId(getSessionId());
+  }, []);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !sessionId) return;
 
+    // Update session timestamp on interaction
+    updateSessionTimestamp(sessionId);
+    
     setMessages((prev) => [...prev, { role: "user", content: input }]);
     setCurrentDocs([]);
 
     try {
-      const relevantDocs = await runRagPipeline(input);
+      const relevantDocs = await runRagPipeline(input, sessionId);
       const context = relevantDocs.map((doc) => doc.content).join("\n\n");
 
       setCurrentDocs(relevantDocs.map((doc) => doc.content));
@@ -120,7 +130,7 @@ export default function AiChat() {
         <Button
           onClick={handleSendMessage}
           className="mr-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-          disabled={!input.trim()}
+          disabled={!input.trim() || !sessionId}
         >
           Send
         </Button>

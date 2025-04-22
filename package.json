@@ -8,10 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "npx drizzle-kit generate",
-    "db:migrate": "npx drizzle-kit migrate"
+    "db:migrate": "tsx db/migrate.ts",
+    "db:push": "npx drizzle-kit push:pg",
+    "db:studio": "npx drizzle-kit studio",
+    "db:clear": "tsx db/clear-data.ts"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.20",
+    "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-slot": "^1.2.0",
     "@types/uuid": "^10.0.0",
     "ai": "^4.3.9",

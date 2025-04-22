@@ -1,5 +1,6 @@
 import AiChat from "@/components/ai-chat";
 import DocumentUploader from "@/components/document-uploader";
+import { ResetButton } from "@/components/ui/reset-button";
 
 export default function Home() {
   return (
@@ -7,6 +8,9 @@ export default function Home() {
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-emerald-700 mt-6">Welcome to ChatWithDocs</h1>
         <p className="text-lg text-gray-600 mt-2">Upload your files and ask questions to get LLM-driven insights.</p>
+        <div className="mt-4">
+          <ResetButton />
+        </div>
       </div>
       <div className="flex w-full max-w-6xl h-[80vh] bg-white shadow-lg rounded-lg">
         {/* Left Column: Document Uploader */}
