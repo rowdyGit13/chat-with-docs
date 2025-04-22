@@ -6,6 +6,8 @@ import { generateCompletionWithContext } from "@/lib/rag/generate/generate-compl
 import { runRagPipeline } from "@/lib/rag/retrieval/run-rag-pipeline";
 import { getSessionId, updateSessionTimestamp } from "@/lib/session";
 import { useEffect, useState } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function AiChat() {
   const [messages, setMessages] = useState<{ role: "user" | "ai"; content: string }[]>([]);
@@ -24,8 +26,8 @@ export default function AiChat() {
 
     // Update session timestamp on interaction
     updateSessionTimestamp(sessionId);
-    
-    setMessages((prev) => [...prev, { role: "user", content: input }]);
+    // Add "You: " to the user's message in bold
+    setMessages((prev) => [...prev, { role: "user", content: `${input}` }]);
     setCurrentDocs([]);
 
     try {
@@ -39,7 +41,7 @@ export default function AiChat() {
         ...prev,
         {
           role: "ai",
-          content: `${answer}`
+          content: `**AI:** ${answer}`
         }
       ]);
     } catch (error) {
@@ -48,7 +50,7 @@ export default function AiChat() {
         ...prev,
         {
           role: "ai",
-          content: "Sorry, there was an error processing your request."
+          content: "**AI:** Sorry, there was an error processing your request."
         }
       ]);
     }
@@ -65,12 +67,22 @@ export default function AiChat() {
         {messages.map((message, index) => (
           <div key={`message-block-${index}`}>
             <div
-              className={`mb-2 p-3 rounded-lg shadow-sm max-w-[85%] ${message.role === "ai" ? "bg-emerald-100 ml-auto text-right" : "bg-white mr-auto"}`}
+              key={index}
+              className={`p-3 rounded-lg max-w-[85%] ${ 
+                message.role === "user" 
+                ? "bg-emerald-100 ml-auto text-emerald-900" 
+                : "bg-gray-100 mr-auto text-gray-800"
+              }`}
             >
-              <strong className={`font-semibold ${message.role === "ai" ? "text-emerald-800" : "text-gray-700"}`}>
-                {message.role === "ai" ? "AI" : "You"}:
-              </strong>
-              <span className="block mt-1 text-sm">{message.content}</span>
+              {message.role === "ai" ? (
+                <div className="prose prose-sm max-w-none text-justify">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                message.content
+              )}
             </div>
             {message.role === "ai" && currentDocs.length > 0 && index === messages.length - 1 && (
               <div
