@@ -27,11 +27,11 @@ export function ResetButton() {
       const data = await response.json();
       
       if (data.success) {
-        setMessage("Demo reset successfully!");
+        setMessage("Uploaded documents cleared successfully!");
         // Refresh the page after 1 second to show the reset
         setTimeout(() => window.location.reload(), 1000);
       } else {
-        setMessage("Failed to reset demo. Please try again.");
+        setMessage("Failed to clear uploaded documents. Please try again.");
       }
     } catch (error) {
       setMessage("An error occurred. Please try again.");
@@ -54,7 +54,7 @@ export function ResetButton() {
             Resetting...
           </>
         ) : (
-          "Reset Demo Data"
+          "Clear uploaded documents"
         )}
       </Button>
       {message && (

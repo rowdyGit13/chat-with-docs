@@ -19,7 +19,7 @@ export async function generateCompletionWithContext(context: string, input: stri
     messages: [
       {
         role: "system",
-        content: `Answer based on the provided context.
+        content: `Answer based on the provided context. If you don't have enough information based off the context, say so.
 Context:
 ${context}
 `
